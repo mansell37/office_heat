@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from .. import ai
 from ..auth import require_auth
+from ..config import ANTHROPIC_API_KEY
 from ..db import get_db
 from ..generators import generate, list_templates
 from ..models import Settings, Workout, WorkoutSession
@@ -26,6 +27,12 @@ def _ftp(db: Session) -> int:
 @router.get("/templates")
 def templates():
     return list_templates()
+
+
+@router.get("/ai/status")
+def ai_status():
+    # Lets the UI disable the ✨ AI button when no key is set (avoids a silent fallback).
+    return {"configured": bool(ANTHROPIC_API_KEY)}
 
 
 @router.post("/generate")

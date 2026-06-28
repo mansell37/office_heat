@@ -117,7 +117,10 @@ export default function WorkoutView({
       {workout.summary && <div className="wk-summary">{workout.summary}</div>}
       {workout.ai_error && (
         <div className="wk-summary" style={{ color: "var(--accent)" }}>
-          (AI unavailable — showing a library workout instead.)
+          AI unavailable, showing a library workout instead.
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+            Reason: {workout.ai_error}
+          </div>
         </div>
       )}
 

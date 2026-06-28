@@ -85,6 +85,8 @@ export const api = {
   updateSettings: (body: Partial<Settings>) =>
     req<Settings>("/api/settings", { method: "PUT", body: JSON.stringify(body) }),
 
+  aiStatus: () => req<{ configured: boolean }>("/api/ai/status"),
+
   garminStatus: () => req<{ configured: boolean }>("/api/garmin/status"),
   garminUpload: (body: { workout: Workout; date?: string }) =>
     req<{ ok: boolean; workout_id: number; scheduled_for: string }>("/api/garmin/upload", {

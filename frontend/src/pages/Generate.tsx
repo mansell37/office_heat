@@ -23,11 +23,13 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState<"" | "lib" | "ai">("");
   const [garmin, setGarmin] = useState(false);
+  const [aiConfigured, setAiConfigured] = useState(true); // assume on until told otherwise
   const [ftp, setFtp] = useState(200);
 
   useEffect(() => {
     api.getSettings().then((s) => { setEnergy(s.default_energy); setFtp(s.ftp); }).catch(() => {});
     api.garminStatus().then((s) => setGarmin(s.configured)).catch(() => {});
+    api.aiStatus().then((s) => setAiConfigured(s.configured)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -132,10 +134,20 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
           <button className="btn primary block lg" disabled={!!loading} onClick={() => generate(false)}>
             {loading === "lib" ? <span className="spinner" /> : "Generate"}
           </button>
-          <button className="btn ghost lg" disabled={!!loading} onClick={() => generate(true)} title="Generate with Claude">
-            {loading === "ai" ? <span className="spinner" /> : "✨ AI"}
+          <button
+            className="btn ghost lg"
+            disabled={!!loading || !aiConfigured}
+            onClick={() => generate(true)}
+            title={aiConfigured ? "Generate with Claude" : "Set ANTHROPIC_API_KEY to enable AI workouts"}
+          >
+            {loading === "ai" ? <span className="spinner" /> : aiConfigured ? "✨ AI" : "✨ AI (off)"}
           </button>
         </div>
+        {!aiConfigured && (
+          <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+            ✨ AI is off — set <code>ANTHROPIC_API_KEY</code> on the server to generate novel workouts with Claude.
+          </div>
+        )}
       </div>
 
       {workout && (
