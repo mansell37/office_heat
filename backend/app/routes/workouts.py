@@ -30,7 +30,8 @@ def templates():
 
 @router.post("/generate")
 def generate_workout(req: GenerateRequest, db: Session = Depends(get_db)):
-    ftp = _ftp(db)
+    # Per-workout FTP override (e.g. a different rider) falls back to the saved default.
+    ftp = req.ftp or _ftp(db)
     if req.use_ai:
         try:
             return ai.generate_ai(req.type, req.duration_min, req.energy, ftp)

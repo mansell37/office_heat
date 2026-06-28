@@ -37,7 +37,8 @@ export default function SettingsPage({ onToast }: { onToast: (m: string) => void
           onChange={(e) => setFtp(parseInt(e.target.value || "0", 10))}
         />
         <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-          Used to set the power targets in bike workouts. Update this as your fitness changes.
+          Your default for bike power targets. You can override it per workout on the
+          Generate screen (handy when someone else rides). Update as your fitness changes.
         </div>
 
         <div className="label mt">Default energy</div>

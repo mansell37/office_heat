@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Workout } from "../types";
 import { finish as finishSound, go, initAudio, rest as restSound, tick, vibrate } from "../sound";
+import { useTrainer } from "../useTrainer";
+
+const BIAS_MIN = 50;
+const BIAS_MAX = 150;
+const BIAS_STEP = 5;
 
 interface Phase {
   label: string;
@@ -52,6 +57,11 @@ export default function Timer({
   const stopwatch = workout.timer === "stopwatch";
   const amrap = workout.timer === "amrap";
 
+  // Bike rides can drive a smart trainer directly (ERG mode) over Web Bluetooth.
+  const isRide = workout.type === "cardio" && workout.timer === "interval";
+  const trainer = useTrainer();
+  const [bias, setBias] = useState(100); // intensity % applied to power targets
+
   const [index, setIndex] = useState(0);
   const [remaining, setRemaining] = useState(stopwatch ? 0 : phases[0]?.seconds ?? 0);
   const [running, setRunning] = useState(true);
@@ -92,6 +102,8 @@ export default function Timer({
     setDone(true);
     finishSound();
     vibrate([80, 60, 80, 60, 160]);
+    // Release the trainer to easy spin so it isn't holding load after you stop.
+    if (isRide) trainer.setTargetPower(0);
   }
 
   useEffect(() => {
@@ -142,6 +154,20 @@ export default function Timer({
     startPhase(Math.max(0, indexRef.current - 1));
   }
 
+  // ---- Trainer / intensity (bike rides only) ----
+  const rideWatts = isRide ? phases[index]?.watts ?? null : null;
+  const target = rideWatts != null ? Math.round((rideWatts * bias) / 100) : null;
+  const adjustBias = (d: number) =>
+    setBias((b) => Math.min(BIAS_MAX, Math.max(BIAS_MIN, b + d)));
+
+  // Push the ERG target to the trainer whenever the block, bias, or connection changes.
+  useEffect(() => {
+    if (isRide && trainer.status === "connected" && target != null) {
+      trainer.setTargetPower(target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, trainer.status, isRide]);
+
   // ---- Done screen ----
   if (done) {
     const elapsed = Math.round(totalRef.current);
@@ -182,7 +208,11 @@ export default function Timer({
         <div className="lbl">{stopwatch ? workout.title : cur?.label}</div>
         {cur?.reps && <div className="reps">{cur.reps}</div>}
         {cur?.watts != null && (
-          <div className="reps">{cur.watts}W · {cur.pct}% FTP</div>
+          <div className="reps">
+            {target ?? cur.watts}W
+            {bias !== 100 && <span className="muted"> ({bias}%)</span>}
+            <span className="muted" style={{ fontSize: 14 }}> · {cur.pct}% FTP</span>
+          </div>
         )}
         {cur?.notes && <div className="notes">{cur.notes}</div>}
         {workout.timer === "emom" && cur && (
@@ -205,6 +235,58 @@ export default function Timer({
             <div style={{ width: `${Math.min(100, phasePct * 100)}%` }} />
           </div>
         </>
+      )}
+
+      {isRide && (
+        <div className="trainer-panel">
+          <div className="trainer-bias">
+            <button className="btn ghost" onClick={() => adjustBias(-BIAS_STEP)} disabled={bias <= BIAS_MIN}>
+              − Easier
+            </button>
+            <div className="trainer-bias-val">
+              <div className="big-pct">{bias}%</div>
+              <div className="muted" style={{ fontSize: 12 }}>
+                {target != null ? `${target}W target` : "intensity"}
+              </div>
+            </div>
+            <button className="btn ghost" onClick={() => adjustBias(BIAS_STEP)} disabled={bias >= BIAS_MAX}>
+              Harder +
+            </button>
+          </div>
+
+          {trainer.status === "connected" ? (
+            <div className="trainer-live">
+              <div className="metric">
+                <span className="m-val">{trainer.data.power ?? "–"}</span>
+                <span className="m-lbl">watts</span>
+              </div>
+              <div className="metric">
+                <span className="m-val">
+                  {trainer.data.cadence != null ? Math.round(trainer.data.cadence) : "–"}
+                </span>
+                <span className="m-lbl">rpm</span>
+              </div>
+              <button className="btn ghost sm" onClick={() => trainer.disconnect()}>Disconnect</button>
+            </div>
+          ) : trainer.status === "unsupported" ? (
+            <div className="muted center" style={{ fontSize: 12 }}>
+              Pair a smart trainer in Chrome or Edge (computer / Android) to auto-set resistance.
+            </div>
+          ) : (
+            <button
+              className="btn block"
+              onClick={() => trainer.connect()}
+              disabled={trainer.status === "connecting"}
+            >
+              {trainer.status === "connecting" ? <span className="spinner" /> : "🔌 Connect trainer"}
+            </button>
+          )}
+          {trainer.status === "error" && trainer.error && (
+            <div className="center" style={{ fontSize: 12, color: "var(--accent)", marginTop: 6 }}>
+              {trainer.error}
+            </div>
+          )}
+        </div>
       )}
 
       {(amrap || stopwatch) && (

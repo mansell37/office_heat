@@ -17,6 +17,7 @@ class GenerateRequest(BaseModel):
     energy: Energy = "ok"
     format: Optional[str] = None       # optional: request a specific format
     use_ai: bool = False               # use Claude instead of the curated library
+    ftp: Optional[int] = Field(default=None, ge=50, le=600)  # per-workout rider FTP override
 
 
 class Block(BaseModel):

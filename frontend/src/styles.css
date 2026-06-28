@@ -159,6 +159,26 @@ body {
 .pip.done { background: var(--accent); }
 .pip.current { background: var(--accent-2); box-shadow: 0 0 0 3px rgba(255, 106, 61, 0.25); }
 
+/* trainer control + intensity bias (bike rides) */
+.trainer-panel {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.trainer-bias { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.trainer-bias .btn { flex: 1; }
+.trainer-bias-val { text-align: center; min-width: 84px; }
+.trainer-bias-val .big-pct { font-size: 24px; font-weight: 800; }
+.trainer-live { display: flex; align-items: center; justify-content: space-around; gap: 10px; }
+.metric { text-align: center; }
+.metric .m-val { display: block; font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+.metric .m-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.btn.sm { padding: 8px 12px; font-size: 13px; }
+
+/* rider FTP stepper (generate screen) */
+.ftp-row { display: flex; align-items: center; gap: 8px; }
+.ftp-input { text-align: center; font-weight: 700; }
+.ftp-step { flex: none; width: 48px; font-size: 22px; line-height: 1; }
+
 /* misc */
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .muted { color: var(--muted); }

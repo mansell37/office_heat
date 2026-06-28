@@ -13,6 +13,13 @@ when time and sleep are in short supply.
 - **Built-in timers** — an EMOM timer with per-minute beeps and auto-advance, an
   interval timer for circuits/Tabata/bike, an AMRAP round counter, and a stopwatch
 - **Save & rate** workouts (👍/👎/⭐) and log every session to your **history**
+- **Ride bike workouts in-app on a smart trainer** — connect a Wahoo (or any
+  FTMS) trainer over **Web Bluetooth** and the timer drives it in **ERG mode**,
+  auto-setting the target watts for each block and showing live power/cadence. Use
+  the **− Easier / Harder +** buttons mid-ride to bias the whole workout up or down.
+  (Web Bluetooth works in Chrome/Edge on desktop or Android — not on iOS.)
+- **Per-workout Rider FTP** — set whoever's riding's FTP right on the main screen,
+  so a second rider gets correct power targets without touching your saved default
 - **Send bike workouts to Garmin** — uploads a structured ride and schedules it on
   your Garmin calendar, which syncs to your Edge
 - **Password-gated** and deployable on **Railway** as a single service

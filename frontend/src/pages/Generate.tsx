@@ -23,9 +23,10 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState<"" | "lib" | "ai">("");
   const [garmin, setGarmin] = useState(false);
+  const [ftp, setFtp] = useState(200);
 
   useEffect(() => {
-    api.getSettings().then((s) => setEnergy(s.default_energy)).catch(() => {});
+    api.getSettings().then((s) => { setEnergy(s.default_energy); setFtp(s.ftp); }).catch(() => {});
     api.garminStatus().then((s) => setGarmin(s.configured)).catch(() => {});
   }, []);
 
@@ -44,7 +45,10 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
     setLoading(useAi ? "ai" : "lib");
     setWorkout(null);
     try {
-      const wk = await api.generate({ type, duration_min: duration, energy, format, use_ai: useAi });
+      const wk = await api.generate({
+        type, duration_min: duration, energy, format, use_ai: useAi,
+        ftp: type === "cardio" ? ftp : undefined,
+      });
       setWorkout(wk);
       if (wk.ai_error) onToast("AI was unavailable — gave you a library workout.");
     } catch (e) {
@@ -82,6 +86,37 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
             </div>
           ))}
         </div>
+
+        {type === "cardio" && (
+          <>
+            <div className="label mt">
+              Rider FTP (watts)
+              <span className="muted" style={{ textTransform: "none" }}> · sets power targets</span>
+            </div>
+            <div className="ftp-row">
+              <button
+                className="btn ghost ftp-step"
+                onClick={() => setFtp((v) => Math.max(50, v - 5))}
+                aria-label="Lower FTP"
+              >−</button>
+              <input
+                className="input ftp-input"
+                type="number"
+                inputMode="numeric"
+                value={ftp}
+                onChange={(e) => setFtp(Math.min(600, Math.max(50, parseInt(e.target.value || "0", 10))))}
+              />
+              <button
+                className="btn ghost ftp-step"
+                onClick={() => setFtp((v) => Math.min(600, v + 5))}
+                aria-label="Raise FTP"
+              >+</button>
+            </div>
+            <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+              Different rider? Set their FTP here just for this workout — it won't change your saved default.
+            </div>
+          </>
+        )}
 
         <div className="label mt">Style <span className="muted" style={{ textTransform: "none" }}>(optional)</span></div>
         <div className="chips">

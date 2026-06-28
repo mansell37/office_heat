@@ -49,6 +49,7 @@ export const api = {
     energy: Energy;
     format?: string | null;
     use_ai?: boolean;
+    ftp?: number | null;
   }) => req<Workout>("/api/generate", { method: "POST", body: JSON.stringify(body) }),
 
   listWorkouts: (params?: { type?: WorkoutType; favorite?: boolean }) => {
