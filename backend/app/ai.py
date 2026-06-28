@@ -74,11 +74,18 @@ def generate_ai(wtype, duration_min, energy, ftp=200):
     client = Anthropic(api_key=ANTHROPIC_API_KEY)
     msg = client.messages.create(
         model=ANTHROPIC_MODEL,
-        max_tokens=1500,
+        # A full workout (warm-up + many intervals + cool-down, each with notes)
+        # can run well past 1.5k tokens; too small a cap truncates the JSON mid-object
+        # and the parse fails. 16k is the safe non-streaming default for this model.
+        max_tokens=16000,
         system=_system_prompt(wtype, duration_min, energy, ftp),
         messages=[{"role": "user",
                    "content": f"Generate the {duration_min}-minute {wtype} workout now. JSON only."}],
     )
+    # If we hit the token ceiling the JSON is incomplete — surface a clear reason
+    # rather than a downstream "Expecting ',' delimiter" parse error.
+    if msg.stop_reason == "max_tokens":
+        raise RuntimeError("AI response was cut off (hit the token limit) — try again.")
     data = _extract_json("".join(b.text for b in msg.content if b.type == "text"))
 
     # Normalise / fill required fields and compute watts for cardio.
