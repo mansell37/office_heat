@@ -9,11 +9,12 @@ NOTE: the upload path must be validated against a live account. If the account h
 MFA enabled, headless login may fail — the API surfaces a clear error and the UI
 falls back to on-screen / manual use.
 """
+import base64
 from datetime import date
 
 from sqlalchemy.orm import Session
 
-from .config import GARMIN_EMAIL, GARMIN_PASSWORD
+from .config import GARMIN_EMAIL, GARMIN_PASSWORD, GARMIN_TOKENS_B64
 from .models import GarminToken
 
 # Garmin Connect workout enum mappings (unofficial but stable).
@@ -30,7 +31,18 @@ _TARGET_NONE = {"workoutTargetTypeId": 1, "workoutTargetTypeKey": "no.target"}
 
 
 def is_configured() -> bool:
-    return bool(GARMIN_EMAIL and GARMIN_PASSWORD)
+    # A pre-generated token is enough on its own (no login needed).
+    return bool(GARMIN_TOKENS_B64) or bool(GARMIN_EMAIL and GARMIN_PASSWORD)
+
+
+def _token_from_env() -> str | None:
+    """Decode GARMIN_TOKENS_B64 into the raw garth token JSON, if set."""
+    if not GARMIN_TOKENS_B64:
+        return None
+    try:
+        return base64.b64decode(GARMIN_TOKENS_B64).decode()
+    except Exception:
+        return None
 
 
 def _save_token(db: Session, token_str: str):
@@ -50,15 +62,29 @@ def get_client(db: Session):
     from garminconnect import Garmin
 
     row = db.get(GarminToken, 1)
-    # Try the cached session first.
-    if row and row.token_json:
+    # Try the DB-cached token first, then the env-var token. Both are garth
+    # session JSON consumed by garth Client.loads(). Trying both means a freshly
+    # updated GARMIN_TOKENS_B64 still works even if a stale token sits in the DB.
+    candidates = [row.token_json if row else None, _token_from_env()]
+    seen = set()
+    for token in candidates:
+        if not token or token in seen:
+            continue
+        seen.add(token)
         try:
             client = Garmin()
-            client.garth.loads(row.token_json)
-            client.get_full_name()  # cheap validation call
+            client.garth.loads(token)
+            client.get_full_name()  # cheap call that fails if the token is dead
+            _save_token(db, token)  # persist (important when seeded from env)
             return client
         except Exception:
-            pass  # fall through to a fresh login
+            continue  # try the next candidate, then fall back to a login
+
+    if not (GARMIN_EMAIL and GARMIN_PASSWORD):
+        raise RuntimeError(
+            "Garmin token is missing or expired, and no GARMIN_EMAIL/GARMIN_PASSWORD "
+            "is set to log in. Re-generate GARMIN_TOKENS_B64 with the bootstrap script."
+        )
 
     client = Garmin(GARMIN_EMAIL, GARMIN_PASSWORD)
     client.login()

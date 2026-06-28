@@ -61,7 +61,8 @@ Copy `.env.example` to `.env` for local use, or set these as Railway service var
 | `DATABASE_URL` | Injected automatically by Railway Postgres. SQLite fallback if unset. |
 | `ANTHROPIC_API_KEY` | Enables the ✨ AI generate button (server-side only). |
 | `ANTHROPIC_MODEL` | Defaults to `claude-opus-4-8`. |
-| `GARMIN_EMAIL` / `GARMIN_PASSWORD` | Enables uploading bike workouts to Garmin. |
+| `GARMIN_TOKENS_B64` | **Preferred** Garmin auth — a pre-generated session token (avoids MFA login). |
+| `GARMIN_EMAIL` / `GARMIN_PASSWORD` | Fallback Garmin auth via direct login (may hit MFA in the cloud). |
 | `DEFAULT_FTP` | Starting FTP (watts) for bike power targets. Editable in Settings. |
 
 > 🔒 Secrets live in env vars only — never commit `.env`. It is git-ignored.
@@ -84,9 +85,19 @@ The health check at `/api/health` lets Railway know the service is up.
 ## Garmin upload notes
 
 Uploading bike workouts uses [`python-garminconnect`](https://github.com/cyberjunky/python-garminconnect).
-The login token is cached in the database so we don't re-authenticate every request.
 
-⚠️ **Needs live testing against your account.** If your Garmin account has **MFA/2FA**
-enabled, headless login can fail — the app surfaces a clear error and you can still use
-every other feature (timers, on-screen intervals). If that happens, we can add a one-time
-token bootstrap or a Zwift `.zwo` export instead.
+**Recommended auth: a pre-generated token** (`GARMIN_TOKENS_B64`). This skips the
+headless login entirely, so **MFA/2FA is not a problem**. Generate it on your own
+machine:
+
+```bash
+cd backend
+.venv/Scripts/python scripts/garmin_bootstrap.py   # prints a base64 string
+```
+
+Paste the printed string into Railway as `GARMIN_TOKENS_B64`. The token is
+account-level — if you already made one for another app (e.g. ripe_fitness), the
+**same string works here unchanged**. The token is also cached in the database
+and auto-refreshes; if it ever fully expires, re-run the script and update the var.
+
+`GARMIN_EMAIL` / `GARMIN_PASSWORD` are an optional fallback (direct login).

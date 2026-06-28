@@ -31,6 +31,10 @@ ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-8").strip()
 
 GARMIN_EMAIL = os.getenv("GARMIN_EMAIL", "").strip()
 GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD", "").strip()
+# Pre-generated garth session token (base64 of garth Client.dumps()). Lets us
+# auth without a headless login, sidestepping MFA. Same format ripe_fitness uses,
+# and it's account-level, so an existing GARMIN_TOKENS_B64 can be reused as-is.
+GARMIN_TOKENS_B64 = os.getenv("GARMIN_TOKENS_B64", "").strip()
 
 DEFAULT_FTP = int(os.getenv("DEFAULT_FTP", "200"))
 
