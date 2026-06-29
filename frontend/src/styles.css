@@ -139,23 +139,23 @@ body {
   display: flex; flex-direction: column; padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
 }
 .timer-phase { text-align: center; color: var(--accent); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-.timer-current { text-align: center; margin-top: 6px; }
-.timer-current .lbl { font-size: clamp(34px, 7vw, 52px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.05; }
-.timer-current .reps { font-size: clamp(22px, 5vw, 34px); color: var(--accent); margin-top: 8px; font-weight: 800; }
-.timer-current .notes { color: var(--text); opacity: 0.85; font-size: clamp(15px, 2.4vw, 19px); margin-top: 8px; }
+.timer-current { text-align: center; margin-top: 8px; }
+.timer-current .lbl { font-size: clamp(40px, 9.5vw, 76px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.02; }
+.timer-current .reps { font-size: clamp(30px, 7.5vw, 56px); color: var(--accent); margin-top: 10px; font-weight: 800; line-height: 1; }
+.timer-current .notes { color: var(--text); opacity: 0.85; font-size: clamp(17px, 3.2vw, 26px); margin-top: 12px; line-height: 1.25; }
 .timer-clock {
   flex: 1; display: grid; place-items: center;
 }
-.timer-clock .big { font-size: clamp(72px, 26vw, 150px); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -3px; }
+.timer-clock .big { font-size: clamp(96px, 32vw, 230px); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -3px; line-height: 0.9; }
 .timer-clock.work .big { color: var(--text); }
 .timer-clock.rest .big { color: var(--blue); }
 .timer-progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
 .timer-progress > div { height: 100%; background: var(--accent); transition: width 0.2s linear; }
-.timer-up-next { text-align: center; color: var(--text); font-size: clamp(16px, 2.6vw, 20px); font-weight: 600; margin-bottom: 12px; min-height: 22px; }
+.timer-up-next { text-align: center; color: var(--text); font-size: clamp(20px, 4vw, 30px); font-weight: 700; margin-bottom: 12px; min-height: 26px; }
 .timer-controls { display: flex; gap: 10px; }
 .timer-controls .btn { flex: 1; }
-.round-pips { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-.pip { width: 8px; height: 8px; border-radius: 999px; background: var(--surface-2); }
+.round-pips { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.pip { width: 12px; height: 12px; border-radius: 999px; background: var(--surface-2); }
 .pip.done { background: var(--accent); }
 .pip.current { background: var(--accent-2); box-shadow: 0 0 0 3px rgba(255, 106, 61, 0.25); }
 
