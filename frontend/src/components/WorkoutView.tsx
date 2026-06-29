@@ -88,10 +88,14 @@ export default function WorkoutView({
     }
   }
 
-  async function logSession(elapsedSec: number, rating: "like" | "dislike" | null) {
+  async function logSession(
+    elapsedSec: number,
+    rating: "like" | "dislike" | null,
+    difficulty: string | null = null
+  ) {
     setShowTimer(false);
     try {
-      await api.logSession({ workout, workout_id: localSavedId, duration_actual_sec: elapsedSec, rating });
+      await api.logSession({ workout, workout_id: localSavedId, duration_actual_sec: elapsedSec, rating, difficulty });
       if (rating && !localSavedId) {
         const row = await api.saveWorkout({ workout, rating });
         setLocalSavedId(row.id);

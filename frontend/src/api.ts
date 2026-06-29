@@ -77,6 +77,7 @@ export const api = {
     workout_id?: number | null;
     duration_actual_sec?: number | null;
     rating?: "like" | "dislike" | null;
+    difficulty?: string | null;
     notes?: string | null;
   }) => req<SessionLog>("/api/sessions", { method: "POST", body: JSON.stringify(body) }),
   listSessions: () => req<SessionLog[]>("/api/sessions"),

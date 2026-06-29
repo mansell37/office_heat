@@ -43,6 +43,8 @@ export interface SavedWorkout {
   created_at: string;
 }
 
+export type Difficulty = "too_easy" | "easy" | "right" | "hard" | "too_hard";
+
 export interface SessionLog {
   id: number;
   title: string;
@@ -52,6 +54,7 @@ export interface SessionLog {
   duration_planned_min: number | null;
   duration_actual_sec: number | null;
   rating: "like" | "dislike" | null;
+  difficulty: Difficulty | null;
   notes: string | null;
   completed_at: string;
 }

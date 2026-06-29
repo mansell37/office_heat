@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Workout } from "../types";
+import type { Difficulty, Workout } from "../types";
+import { api } from "../api";
 import { finish as finishSound, go, initAudio, rest as restSound, tick, vibrate } from "../sound";
 import { useTrainer } from "../useTrainer";
 import { loadQuiz, type QuizQ } from "../quiz";
@@ -9,6 +10,15 @@ import RideChart, { type Sample } from "./RideChart";
 const BIAS_MIN = 50;
 const BIAS_MAX = 150;
 const BIAS_STEP = 5;
+
+// Post-workout difficulty review. ftp = % FTP nudge suggested for bike rides.
+const DIFFS: { key: Difficulty; emoji: string; label: string; ftp: number }[] = [
+  { key: "too_easy", emoji: "😴", label: "Too easy", ftp: 0.05 },
+  { key: "easy", emoji: "🙂", label: "Easy", ftp: 0.02 },
+  { key: "right", emoji: "💪", label: "Just right", ftp: 0 },
+  { key: "hard", emoji: "😤", label: "Hard", ftp: -0.02 },
+  { key: "too_hard", emoji: "🥵", label: "Too hard", ftp: -0.05 },
+];
 
 interface Phase {
   label: string;
@@ -54,7 +64,7 @@ export default function Timer({
 }: {
   workout: Workout;
   onClose: () => void;
-  onLog: (elapsedSec: number, rating: "like" | "dislike" | null) => void;
+  onLog: (elapsedSec: number, rating: "like" | "dislike" | null, difficulty?: string | null) => void;
 }) {
   const phases = useMemo(() => buildPhases(workout), [workout]);
   const stopwatch = workout.timer === "stopwatch";
@@ -80,6 +90,11 @@ export default function Timer({
 
   // Live power/cadence samples for the ride chart.
   const [samples, setSamples] = useState<Sample[]>([]);
+
+  // Post-workout difficulty review + (rides) FTP suggestion state.
+  const [reviewDiff, setReviewDiff] = useState<Difficulty | null>(null);
+  const [ftpApplied, setFtpApplied] = useState<number | null>(null);
+  const [ftpBusy, setFtpBusy] = useState(false);
 
   const totalPlanned = useMemo(
     () => (stopwatch ? 0 : phases.reduce((a, p) => a + (p.seconds || 0), 0)),
@@ -254,13 +269,60 @@ export default function Timer({
           </>
         )}
 
-        <div className="center muted" style={{ margin: "10px 0 12px" }}>How did it feel?</div>
-        <div className="btn-row" style={{ marginBottom: 10 }}>
-          <button className="btn ghost" onClick={() => onLog(elapsedSec, "dislike")}>👎 Meh</button>
-          <button className="btn ghost" onClick={() => onLog(elapsedSec, "like")}>👍 Loved it</button>
+        <div className="center" style={{ margin: "10px 0 8px", fontWeight: 700 }}>How hard was that?</div>
+        <div className="diff-row">
+          {DIFFS.map((d) => (
+            <button
+              key={d.key}
+              className={`diff-btn ${reviewDiff === d.key ? "sel" : ""}`}
+              onClick={() => { setReviewDiff(d.key); setFtpApplied(null); }}
+            >
+              <span className="diff-emoji">{d.emoji}</span>
+              <span className="diff-lbl">{d.label}</span>
+            </button>
+          ))}
         </div>
-        <div className="btn-row">
-          <button className="btn block" onClick={() => onLog(elapsedSec, null)}>Save to history</button>
+
+        {isRide && reviewDiff && (() => {
+          const work = workout.blocks.find((b) => b.watts && b.power_pct);
+          const rideFtp = work ? Math.round((work.watts! * 100) / work.power_pct!) : null;
+          const pct = DIFFS.find((d) => d.key === reviewDiff)!.ftp;
+          const newFtp = rideFtp != null ? Math.round(rideFtp * (1 + pct)) : null;
+          if (rideFtp == null) return null;
+          if (ftpApplied != null) {
+            return <div className="ftp-suggest done">✅ FTP updated to {ftpApplied}W — future rides will use it.</div>;
+          }
+          if (newFtp == null || newFtp === rideFtp) {
+            return <div className="ftp-suggest">Your FTP ({rideFtp}W) looks about right 👍</div>;
+          }
+          return (
+            <div className="ftp-suggest">
+              <span>
+                That suggests your FTP is nearer <b>{newFtp}W</b> (currently {rideFtp}W).
+              </span>
+              <button
+                className="btn sm"
+                disabled={ftpBusy}
+                onClick={async () => {
+                  setFtpBusy(true);
+                  try {
+                    await api.updateSettings({ ftp: newFtp });
+                    setFtpApplied(newFtp);
+                  } finally {
+                    setFtpBusy(false);
+                  }
+                }}
+              >
+                {ftpBusy ? <span className="spinner" /> : `Set FTP to ${newFtp}W`}
+              </button>
+            </div>
+          );
+        })()}
+
+        <div className="btn-row" style={{ marginTop: 12 }}>
+          <button className="btn block" onClick={() => onLog(elapsedSec, null, reviewDiff)}>
+            Save to history
+          </button>
           <button className="btn ghost" onClick={onClose}>Discard</button>
         </div>
       </div>

@@ -70,6 +70,8 @@ class WorkoutSession(Base):
     duration_planned_min = Column(Integer, nullable=True)
     duration_actual_sec = Column(Integer, nullable=True)
     rating = Column(String(8), nullable=True)        # like | dislike | None
+    # Post-workout difficulty review: too_easy | easy | right | hard | too_hard
+    difficulty = Column(String(12), nullable=True)
     notes = Column(Text, nullable=True)
     structure = Column(JSON, nullable=True)          # snapshot of what was done
     completed_at = Column(DateTime, default=_now)
@@ -85,6 +87,7 @@ class WorkoutSession(Base):
             "duration_planned_min": self.duration_planned_min,
             "duration_actual_sec": self.duration_actual_sec,
             "rating": self.rating,
+            "difficulty": self.difficulty,
             "notes": self.notes,
             "structure": self.structure,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,

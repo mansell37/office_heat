@@ -53,11 +53,15 @@ class RateRequest(BaseModel):
     notes: Optional[str] = None
 
 
+Difficulty = Literal["too_easy", "easy", "right", "hard", "too_hard"]
+
+
 class LogSessionRequest(BaseModel):
     workout: dict[str, Any]
     workout_id: Optional[int] = None
     duration_actual_sec: Optional[int] = None
     rating: Optional[Literal["like", "dislike"]] = None
+    difficulty: Optional[Difficulty] = None
     notes: Optional[str] = None
 
 

@@ -24,6 +24,28 @@ def _ftp(db: Session) -> int:
     return s.ftp if s else 200
 
 
+# How much each difficulty rating nudges future strength volume.
+_DIFF_DELTA = {"too_easy": 0.10, "easy": 0.05, "right": 0.0, "hard": -0.05, "too_hard": -0.10}
+
+
+def _strength_intensity(db: Session) -> float:
+    """Derive a rep-volume multiplier from recent strength difficulty reviews.
+
+    Recent 'too easy' ratings push volume up, 'too hard' pulls it down, so the
+    next workout adapts to how the last few actually felt.
+    """
+    rows = (db.query(WorkoutSession)
+            .filter(WorkoutSession.type == "strength",
+                    WorkoutSession.difficulty.isnot(None))
+            .order_by(desc(WorkoutSession.completed_at))
+            .limit(3).all())
+    deltas = [_DIFF_DELTA.get(r.difficulty, 0.0) for r in rows]
+    if not deltas:
+        return 1.0
+    adj = sum(deltas) / len(deltas)
+    return max(0.8, min(1.25, 1.0 + adj))
+
+
 @router.get("/templates")
 def templates():
     return list_templates()
@@ -48,14 +70,16 @@ def quiz():
 def generate_workout(req: GenerateRequest, db: Session = Depends(get_db)):
     # Per-workout FTP override (e.g. a different rider) falls back to the saved default.
     ftp = req.ftp or _ftp(db)
+    # Strength volume adapts to recent difficulty reviews; cardio adapts via FTP.
+    intensity = _strength_intensity(db) if req.type == "strength" else 1.0
     if req.use_ai:
         try:
             return ai.generate_ai(req.type, req.duration_min, req.energy, ftp)
         except Exception as e:  # fall back to the library so the user always gets a workout
-            wk = generate(req.type, req.duration_min, req.energy, req.format, ftp)
+            wk = generate(req.type, req.duration_min, req.energy, req.format, ftp, intensity=intensity)
             wk["ai_error"] = str(e)
             return wk
-    return generate(req.type, req.duration_min, req.energy, req.format, ftp)
+    return generate(req.type, req.duration_min, req.energy, req.format, ftp, intensity=intensity)
 
 
 @router.get("/workouts")
@@ -136,6 +160,7 @@ def log_session(req: LogSessionRequest, db: Session = Depends(get_db)):
         duration_planned_min=w.get("duration_min"),
         duration_actual_sec=req.duration_actual_sec,
         rating=req.rating,
+        difficulty=req.difficulty,
         notes=req.notes,
         structure=w,
     )

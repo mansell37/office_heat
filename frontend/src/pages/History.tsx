@@ -13,6 +13,14 @@ function fmtDur(sec: number | null) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const DIFF_LABEL: Record<string, string> = {
+  too_easy: "😴 too easy",
+  easy: "🙂 easy",
+  right: "💪 just right",
+  hard: "😤 hard",
+  too_hard: "🥵 too hard",
+};
+
 export default function History() {
   const [items, setItems] = useState<SessionLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +52,10 @@ export default function History() {
             <div className="num" style={{ fontSize: 18 }}>{s.type === "strength" ? "🏋️" : "🚲"}</div>
             <div className="b-main">
               <div className="b-label">{s.title}</div>
-              <div className="b-notes">{fmtDate(s.completed_at)} · {s.format} · {s.energy}</div>
+              <div className="b-notes">
+                {fmtDate(s.completed_at)} · {s.format}
+                {s.difficulty ? ` · ${DIFF_LABEL[s.difficulty] ?? s.difficulty}` : ` · ${s.energy}`}
+              </div>
             </div>
             <div className="b-right">
               <div className="b-reps">{fmtDur(s.duration_actual_sec)}</div>

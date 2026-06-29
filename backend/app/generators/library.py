@@ -75,11 +75,15 @@ def _pick(templates, fmt, key=None):
     return random.choice(templates)
 
 
-def generate(wtype, duration_min, energy, fmt=None, ftp=200, key=None):
-    """Build a scaled workout for the given type/duration/energy."""
+def generate(wtype, duration_min, energy, fmt=None, ftp=200, key=None, intensity=1.0):
+    """Build a scaled workout for the given type/duration/energy.
+
+    ``intensity`` (strength only) nudges rep volume based on recent difficulty
+    reviews — >1 makes it harder, <1 easier.
+    """
     if wtype == "strength":
         t = _pick(STRENGTH_TEMPLATES, fmt, key)
-        wk = strength.BUILDERS[t["format"]](t["keys"], duration_min, energy, t["title"])
+        wk = strength.BUILDERS[t["format"]](t["keys"], duration_min, energy, t["title"], intensity)
     else:
         templates = CARDIO_TEMPLATES
         # On a wrecked day with no specific ask, steer toward easy rides.

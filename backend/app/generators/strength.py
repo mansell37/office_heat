@@ -35,14 +35,14 @@ def _block(key: str, energy: str, seconds=None, kind="work", intensity=1.0):
     }
 
 
-def build_emom(keys, duration_min, energy, title):
+def build_emom(keys, duration_min, energy, title, intensity=1.0):
     """One movement per minute, cycling through ``keys`` for ``duration_min`` minutes."""
     blocks = []
     for i in range(duration_min):
         key = keys[i % len(keys)]
         b = _block(key, energy, seconds=60, kind="work")
         # Show prescribed reps inside the minute, then rest the remainder.
-        b["reps"] = reps_for(key, energy)
+        b["reps"] = reps_for(key, energy, intensity)
         b["minute"] = i + 1
         blocks.append(b)
     return {
@@ -58,9 +58,9 @@ def build_emom(keys, duration_min, energy, title):
     }
 
 
-def build_amrap(keys, duration_min, energy, title):
+def build_amrap(keys, duration_min, energy, title, intensity=1.0):
     """A fixed circuit repeated for as many rounds as possible within the cap."""
-    circuit = [_block(k, energy) for k in keys]
+    circuit = [_block(k, energy, intensity=intensity) for k in keys]
     return {
         "format": "AMRAP",
         "timer": "amrap",
@@ -74,7 +74,7 @@ def build_amrap(keys, duration_min, energy, title):
     }
 
 
-def build_circuit(keys, duration_min, energy, title, work=40):
+def build_circuit(keys, duration_min, energy, title, intensity=1.0, work=40):
     """Stations of timed work, repeated for as many rounds as the duration allows."""
     e = ENERGY[energy]
     work_s = round(work * e["work"])
@@ -103,7 +103,7 @@ def build_circuit(keys, duration_min, energy, title, work=40):
     }
 
 
-def build_tabata(keys, duration_min, energy, title):
+def build_tabata(keys, duration_min, energy, title, intensity=1.0):
     """4-minute Tabata blocks (8 x 20s work / 10s rest), one movement per block."""
     e = ENERGY[energy]
     n_blocks = max(1, duration_min // 4)
@@ -131,10 +131,10 @@ def build_tabata(keys, duration_min, energy, title):
     }
 
 
-def build_ladder(keys, duration_min, energy, title):
+def build_ladder(keys, duration_min, energy, title, intensity=1.0):
     """A descending/ascending rep ladder couplet — rep-based, run with the stopwatch."""
     e = ENERGY[energy]
-    top = max(4, round(10 * e["reps"]))
+    top = max(4, round(10 * e["reps"] * intensity))
     a, b = movements.get(keys[0]), movements.get(keys[1])
     blocks = [
         {"label": f"{a['label']} ladder", "reps": f"{top} down to 1",
