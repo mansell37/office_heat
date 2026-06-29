@@ -143,9 +143,23 @@ body {
 .timer-current .lbl { font-size: clamp(40px, 9.5vw, 76px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.02; }
 .timer-current .reps { font-size: clamp(30px, 7.5vw, 56px); color: var(--accent); margin-top: 10px; font-weight: 800; line-height: 1; }
 .timer-current .notes { color: var(--text); opacity: 0.85; font-size: clamp(17px, 3.2vw, 26px); margin-top: 12px; line-height: 1.25; }
+.timer-current .sanskrit { font-size: clamp(16px, 3vw, 24px); color: var(--muted); font-style: italic; margin-top: 2px; }
 .timer-clock {
   flex: 1; display: grid; place-items: center;
 }
+/* yoga: pose illustration fills the space, countdown sits below */
+.pose-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 0; }
+.pose-img {
+  max-height: 46vh; max-width: 100%; object-fit: contain;
+  background: #f6f5f1; border-radius: 18px; padding: 12px;
+}
+.pose-clock { font-size: clamp(44px, 10vw, 80px); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
+.pose-clock.rest { color: var(--blue); }
+.block-thumb {
+  width: 46px; height: 46px; border-radius: 10px; object-fit: contain;
+  background: #f6f5f1; padding: 3px; flex: none;
+}
+.b-sanskrit { color: var(--muted); font-weight: 500; font-style: italic; }
 .timer-clock .big { font-size: clamp(96px, 32vw, 230px); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -3px; line-height: 0.9; }
 .timer-clock.work .big { color: var(--text); }
 .timer-clock.rest .big { color: var(--blue); }

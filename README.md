@@ -6,6 +6,10 @@ when time and sleep are in short supply.
 
 - **Strength** (kettlebell) workouts: 10 / 15 / 20 / 30 min
 - **Bike** (trainer) workouts: 20 / 30 / 40 / 50 / 60 / 90 min
+- **Yoga** (mat) flows: 10 / 15 / 20 / 30 / 45 min — guided, timed pose holds with
+  breathing cues, Sanskrit names and an illustration for each pose. Three styles
+  (Full-Body Flow / Gentle Restorative / Core & Strength). Pose data &
+  illustrations from the open-source [Yoga API](https://github.com/alexcumplido/yoga-api)
 - **Energy toggle** — `Fresh / OK / Wrecked` scales reps, rounds, rest and intensity
   so a bad-sleep day automatically gives you a shorter, easier session
 - **Curated library** of workouts that flex to your chosen time, plus an optional

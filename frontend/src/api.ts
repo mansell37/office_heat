@@ -41,6 +41,7 @@ export const api = {
     req<{
       strength: { key: string; title: string; format: string; blurb: string }[];
       cardio: { key: string; title: string; format: string; blurb: string }[];
+      yoga: { key: string; title: string; format: string; blurb: string }[];
     }>("/api/templates"),
 
   generate: (body: {

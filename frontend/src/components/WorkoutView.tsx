@@ -113,7 +113,9 @@ export default function WorkoutView({
       <div className="badge accent" style={{ display: "inline-block" }}>{workout.format}</div>
       <div className="wk-title">{workout.title}</div>
       <div className="wk-meta">
-        <span className="badge">{workout.type === "strength" ? "🏋️ Strength" : "🚲 Bike"}</span>
+        <span className="badge">
+          {workout.type === "strength" ? "🏋️ Strength" : workout.type === "yoga" ? "🧘 Yoga" : "🚲 Bike"}
+        </span>
         <span className="badge">⏱ {workout.duration_min} min</span>
         <span className="badge">{ENERGY_EMOJI[workout.energy]} {workout.energy}</span>
         {workout.source === "ai" && <span className="badge accent">✨ AI</span>}
@@ -131,9 +133,16 @@ export default function WorkoutView({
       <div className="block-list">
         {workout.blocks.map((b, i) => (
           <div key={i} className={`block ${b.kind === "rest" ? "rest" : ""}`}>
-            <div className="num">{b.minute ?? i + 1}</div>
+            {b.image ? (
+              <img className="block-thumb" src={b.image} alt="" loading="lazy" />
+            ) : (
+              <div className="num">{b.minute ?? i + 1}</div>
+            )}
             <div className="b-main">
-              <div className="b-label">{b.label}</div>
+              <div className="b-label">
+                {b.label}
+                {b.sanskrit && <span className="b-sanskrit"> · {b.sanskrit}</span>}
+              </div>
               {b.notes && <div className="b-notes">{b.notes}</div>}
             </div>
             {blockRight(b)}

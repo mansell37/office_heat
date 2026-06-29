@@ -6,7 +6,7 @@ energy level, so a handful of templates cover every time/energy combination.
 """
 import random
 
-from . import cardio, strength
+from . import cardio, strength, yoga
 
 STRENGTH_TEMPLATES = [
     {"key": "emom_engine", "title": "16kg EMOM Engine", "format": "EMOM",
@@ -53,13 +53,26 @@ CARDIO_TEMPLATES = [
      "blurb": "Gentle flush — perfect for a wrecked-sleep day."},
 ]
 
+YOGA_TEMPLATES = [
+    {"key": "flow", "title": "Full-Body Flow", "format": "FLOW",
+     "blurb": "Balanced mat flow — warm up, standing + floor poses, wind down."},
+    {"key": "gentle", "title": "Gentle Restorative", "format": "GENTLE",
+     "blurb": "Slow, calming holds and hip openers. Great for a tired day."},
+    {"key": "core", "title": "Core & Strength", "format": "CORE",
+     "blurb": "Stronger flow with plank, boat and balance work."},
+]
+
+
+def _slim(templates):
+    return [{"key": t["key"], "title": t["title"], "format": t["format"], "blurb": t["blurb"]}
+            for t in templates]
+
 
 def list_templates():
     return {
-        "strength": [{"key": t["key"], "title": t["title"], "format": t["format"],
-                      "blurb": t["blurb"]} for t in STRENGTH_TEMPLATES],
-        "cardio": [{"key": t["key"], "title": t["title"], "format": t["format"],
-                    "blurb": t["blurb"]} for t in CARDIO_TEMPLATES],
+        "strength": _slim(STRENGTH_TEMPLATES),
+        "cardio": _slim(CARDIO_TEMPLATES),
+        "yoga": _slim(YOGA_TEMPLATES),
     }
 
 
@@ -84,6 +97,13 @@ def generate(wtype, duration_min, energy, fmt=None, ftp=200, key=None, intensity
     if wtype == "strength":
         t = _pick(STRENGTH_TEMPLATES, fmt, key)
         wk = strength.BUILDERS[t["format"]](t["keys"], duration_min, energy, t["title"], intensity)
+    elif wtype == "yoga":
+        templates = YOGA_TEMPLATES
+        # On a wrecked day with no specific ask, steer toward the gentle flow.
+        if fmt is None and key is None and energy == "wrecked":
+            templates = [t for t in YOGA_TEMPLATES if t["format"] == "GENTLE"]
+        t = _pick(templates, fmt, key)
+        wk = yoga.BUILDERS[t["format"]](None, duration_min, energy, t["title"])
     else:
         templates = CARDIO_TEMPLATES
         # On a wrecked day with no specific ask, steer toward easy rides.

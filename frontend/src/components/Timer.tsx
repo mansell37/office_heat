@@ -28,6 +28,8 @@ interface Phase {
   notes?: string | null;
   watts?: number | null;
   pct?: number | null;
+  sanskrit?: string | null;
+  image?: string | null;
 }
 
 function buildPhases(w: Workout): Phase[] {
@@ -40,6 +42,7 @@ function buildPhases(w: Workout): Phase[] {
     return w.blocks.map((b) => ({
       label: b.label, seconds: b.seconds || 30, kind: b.kind || "work",
       reps: b.reps, notes: b.notes, watts: b.watts, pct: b.power_pct,
+      sanskrit: b.sanskrit, image: b.image,
     }));
   }
   if (w.timer === "amrap") {
@@ -72,6 +75,7 @@ export default function Timer({
 
   // Bike rides can drive a smart trainer directly (ERG mode) over Web Bluetooth.
   const isRide = workout.type === "cardio" && workout.timer === "interval";
+  const isYoga = workout.type === "yoga";
   const trainer = useTrainer();
   const [bias, setBias] = useState(100); // intensity % applied to power targets
 
@@ -352,6 +356,7 @@ export default function Timer({
 
       <div className="timer-current">
         <div className="lbl">{stopwatch ? workout.title : cur?.label}</div>
+        {cur?.sanskrit && <div className="sanskrit">{cur.sanskrit}</div>}
         {cur?.reps && <div className="reps">{cur.reps}</div>}
         {cur?.watts != null && (
           <div className="reps">
@@ -370,9 +375,16 @@ export default function Timer({
         )}
       </div>
 
-      <div className={`timer-clock ${working ? "work" : "rest"}`}>
-        <div className="big">{stopwatch ? fmt(totalRef.current) : fmt(remaining)}</div>
-      </div>
+      {isYoga && cur?.image ? (
+        <div className="pose-hero">
+          <img className="pose-img" src={cur.image} alt={cur.label} />
+          <div className={`pose-clock ${working ? "work" : "rest"}`}>{fmt(remaining)}</div>
+        </div>
+      ) : (
+        <div className={`timer-clock ${working ? "work" : "rest"}`}>
+          <div className="big">{stopwatch ? fmt(totalRef.current) : fmt(remaining)}</div>
+        </div>
+      )}
 
       {isRide && (
         <div className="ride-metrics">

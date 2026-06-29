@@ -1,5 +1,5 @@
 export type Energy = "fresh" | "ok" | "wrecked";
-export type WorkoutType = "strength" | "cardio";
+export type WorkoutType = "strength" | "cardio" | "yoga";
 export type TimerKind = "emom" | "amrap" | "interval" | "stopwatch";
 
 export interface Block {
@@ -11,6 +11,9 @@ export interface Block {
   kind?: string | null;
   notes?: string | null;
   minute?: number;
+  sanskrit?: string | null;
+  image?: string | null;
+  benefits?: string | null;
 }
 
 export interface Workout {

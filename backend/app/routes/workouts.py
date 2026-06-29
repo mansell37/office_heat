@@ -72,7 +72,8 @@ def generate_workout(req: GenerateRequest, db: Session = Depends(get_db)):
     ftp = req.ftp or _ftp(db)
     # Strength volume adapts to recent difficulty reviews; cardio adapts via FTP.
     intensity = _strength_intensity(db) if req.type == "strength" else 1.0
-    if req.use_ai:
+    # Yoga always uses the curated library (the AI path can't supply pose images).
+    if req.use_ai and req.type != "yoga":
         try:
             return ai.generate_ai(req.type, req.duration_min, req.energy, ftp)
         except Exception as e:  # fall back to the library so the user always gets a workout

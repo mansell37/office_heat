@@ -4,7 +4,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 Energy = Literal["fresh", "ok", "wrecked"]
-WorkoutType = Literal["strength", "cardio"]
+WorkoutType = Literal["strength", "cardio", "yoga"]
 
 
 class LoginRequest(BaseModel):
@@ -27,6 +27,9 @@ class Block(BaseModel):
     power_pct: Optional[int] = None
     notes: Optional[str] = None
     kind: Optional[str] = None         # work | rest | warmup | cooldown (cardio)
+    sanskrit: Optional[str] = None     # yoga: pose name
+    image: Optional[str] = None        # yoga: illustration URL
+    benefits: Optional[str] = None     # yoga: what the pose does
 
 
 class WorkoutOut(BaseModel):

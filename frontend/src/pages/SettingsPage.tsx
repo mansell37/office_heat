@@ -70,6 +70,10 @@ export default function SettingsPage({ onToast }: { onToast: (m: string) => void
 
       <div className="card center muted" style={{ fontSize: 12 }}>
         Office Heat · your equipment: 16kg kettlebell · yoga mat · Wahoo trainer
+        <div style={{ marginTop: 6 }}>
+          Yoga pose data &amp; illustrations from the{" "}
+          <a href="https://github.com/alexcumplido/yoga-api" target="_blank" rel="noreferrer">Yoga API</a>.
+        </div>
       </div>
     </div>
   );

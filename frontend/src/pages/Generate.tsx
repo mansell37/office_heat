@@ -6,7 +6,9 @@ import type { Energy, Workout, WorkoutType } from "../types";
 const DURATIONS: Record<WorkoutType, number[]> = {
   strength: [10, 15, 20, 30],
   cardio: [20, 30, 40, 50, 60, 90],
+  yoga: [10, 15, 20, 30, 45],
 };
+const DEFAULT_IDX: Record<WorkoutType, number> = { strength: 2, cardio: 1, yoga: 2 };
 
 const ENERGIES: { key: Energy; emoji: string; name: string; desc: string }[] = [
   { key: "fresh", emoji: "💪", name: "Fresh", desc: "Full send" },
@@ -35,7 +37,7 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
   useEffect(() => {
     api.templates().then((t) => setFormats(t[type])).catch(() => {});
     // keep the duration valid for the selected type
-    if (!DURATIONS[type].includes(duration)) setDuration(DURATIONS[type][type === "strength" ? 2 : 1]);
+    if (!DURATIONS[type].includes(duration)) setDuration(DURATIONS[type][DEFAULT_IDX[type]]);
     setFormat(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
@@ -67,6 +69,7 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
         <div className="seg">
           <button className={type === "strength" ? "active" : ""} onClick={() => setType("strength")}>🏋️ Strength</button>
           <button className={type === "cardio" ? "active" : ""} onClick={() => setType("cardio")}>🚲 Bike</button>
+          <button className={type === "yoga" ? "active" : ""} onClick={() => setType("yoga")}>🧘 Yoga</button>
         </div>
 
         <div className="label mt">Time (minutes)</div>
@@ -134,16 +137,18 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
           <button className="btn primary block lg" disabled={!!loading} onClick={() => generate(false)}>
             {loading === "lib" ? <span className="spinner" /> : "Generate"}
           </button>
-          <button
-            className="btn ghost lg"
-            disabled={!!loading || !aiConfigured}
-            onClick={() => generate(true)}
-            title={aiConfigured ? "Generate with Claude" : "Set ANTHROPIC_API_KEY to enable AI workouts"}
-          >
-            {loading === "ai" ? <span className="spinner" /> : aiConfigured ? "✨ AI" : "✨ AI (off)"}
-          </button>
+          {type !== "yoga" && (
+            <button
+              className="btn ghost lg"
+              disabled={!!loading || !aiConfigured}
+              onClick={() => generate(true)}
+              title={aiConfigured ? "Generate with Claude" : "Set ANTHROPIC_API_KEY to enable AI workouts"}
+            >
+              {loading === "ai" ? <span className="spinner" /> : aiConfigured ? "✨ AI" : "✨ AI (off)"}
+            </button>
+          )}
         </div>
-        {!aiConfigured && (
+        {!aiConfigured && type !== "yoga" && (
           <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
             ✨ AI is off — set <code>ANTHROPIC_API_KEY</code> on the server to generate novel workouts with Claude.
           </div>
