@@ -224,23 +224,43 @@ export default function Timer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, trainer.status, isRide]);
 
-  // ---- Done screen ----
+  // ---- Done screen / post-workout summary ----
   if (done) {
-    const elapsed = Math.round(totalRef.current);
+    const elapsedSec = Math.round(totalRef.current);
+    const powers = samples.map((s) => s.p).filter((p): p is number => p != null && p > 0);
+    const cads = samples.map((s) => s.c).filter((c): c is number => c != null && c > 0);
+    const mean = (a: number[]) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0);
+    const avgPower = mean(powers);
+    const maxPower = powers.length ? Math.max(...powers) : 0;
+    const avgCad = mean(cads);
+    const hasRideStats = isRide && samples.length > 1;
+
     return (
-      <div className="timer-overlay">
-        <div className="timer-clock work" style={{ flexDirection: "column", gap: 8 }}>
-          <div style={{ fontSize: 48 }}>🔥</div>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>Workout done!</div>
-          <div className="muted">Elapsed {fmt(elapsed)}{rounds ? ` · ${rounds} rounds` : ""}</div>
+      <div className="timer-overlay done-screen">
+        <div className="done-hero">
+          <div className="emoji">🔥</div>
+          <div className="title">Workout done!</div>
+          <div className="sub">{fmt(elapsedSec)} elapsed{rounds ? ` · ${rounds} rounds` : ""}</div>
         </div>
-        <div className="center muted" style={{ marginBottom: 12 }}>How did it feel?</div>
+
+        {hasRideStats && (
+          <>
+            <div className="ride-metrics">
+              <div className="rm-tile"><div className="rm-val">{avgPower}</div><div className="rm-lbl">Avg · W</div></div>
+              <div className="rm-tile accent"><div className="rm-val">{maxPower}</div><div className="rm-lbl">Max · W</div></div>
+              <div className="rm-tile"><div className="rm-val">{avgCad || "–"}</div><div className="rm-lbl">Avg · rpm</div></div>
+            </div>
+            <RideChart samples={samples} />
+          </>
+        )}
+
+        <div className="center muted" style={{ margin: "10px 0 12px" }}>How did it feel?</div>
         <div className="btn-row" style={{ marginBottom: 10 }}>
-          <button className="btn ghost" onClick={() => onLog(elapsed, "dislike")}>👎 Meh</button>
-          <button className="btn ghost" onClick={() => onLog(elapsed, "like")}>👍 Loved it</button>
+          <button className="btn ghost" onClick={() => onLog(elapsedSec, "dislike")}>👎 Meh</button>
+          <button className="btn ghost" onClick={() => onLog(elapsedSec, "like")}>👍 Loved it</button>
         </div>
         <div className="btn-row">
-          <button className="btn block" onClick={() => onLog(elapsed, null)}>Save to history</button>
+          <button className="btn block" onClick={() => onLog(elapsedSec, null)}>Save to history</button>
           <button className="btn ghost" onClick={onClose}>Discard</button>
         </div>
       </div>
