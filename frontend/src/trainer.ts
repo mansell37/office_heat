@@ -14,6 +14,13 @@ const FTMS_SERVICE = 0x1826;
 const CHAR_CONTROL_POINT = 0x2ad9; // Fitness Machine Control Point (write + indicate)
 const CHAR_INDOOR_BIKE_DATA = 0x2ad2; // Indoor Bike Data (notify)
 
+// Other services a trainer may advertise. Many trainers (incl. the Wahoo KICKR)
+// don't put FTMS in their advertisement packet — they advertise Cycling Power
+// and their name, exposing FTMS only after you connect. So we discover broadly
+// (by these services and by name) and still drive control over FTMS once connected.
+const CYCLING_POWER_SERVICE = 0x1818;
+const DEVICE_INFO_SERVICE = 0x180a;
+
 // Control Point op codes.
 const OP_REQUEST_CONTROL = 0x00;
 const OP_START_RESUME = 0x07;
@@ -78,8 +85,16 @@ export class Trainer {
     }
     const bt = (navigator as unknown as { bluetooth: Bluetooth }).bluetooth;
     const device = await bt.requestDevice({
-      filters: [{ services: [FTMS_SERVICE] }],
-      optionalServices: [FTMS_SERVICE],
+      // Match on any of: FTMS, Cycling Power, or a Wahoo/KICKR name — so the
+      // trainer shows up in the chooser regardless of which it advertises.
+      filters: [
+        { services: [FTMS_SERVICE] },
+        { services: [CYCLING_POWER_SERVICE] },
+        { namePrefix: "KICKR" },
+        { namePrefix: "Wahoo" },
+      ],
+      // We may only access services listed here after connecting.
+      optionalServices: [FTMS_SERVICE, CYCLING_POWER_SERVICE, DEVICE_INFO_SERVICE],
     });
     this.device = device;
     device.addEventListener("gattserverdisconnected", () => {
