@@ -86,6 +86,10 @@ export const api = {
     req<Settings>("/api/settings", { method: "PUT", body: JSON.stringify(body) }),
 
   aiStatus: () => req<{ configured: boolean }>("/api/ai/status"),
+  quiz: () =>
+    req<{ questions: { q: string; options: string[]; answer: string }[]; source: string }>(
+      "/api/quiz"
+    ),
 
   garminStatus: () => req<{ configured: boolean }>("/api/garmin/status"),
   garminUpload: (body: { workout: Workout; date?: string }) =>

@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Workout } from "../types";
 import { finish as finishSound, go, initAudio, rest as restSound, tick, vibrate } from "../sound";
 import { useTrainer } from "../useTrainer";
+import { loadQuiz, type QuizQ } from "../quiz";
+import QuizCard from "./QuizCard";
+import RideChart, { type Sample } from "./RideChart";
 
 const BIAS_MIN = 50;
 const BIAS_MAX = 150;
@@ -64,24 +67,50 @@ export default function Timer({
 
   const [index, setIndex] = useState(0);
   const [remaining, setRemaining] = useState(stopwatch ? 0 : phases[0]?.seconds ?? 0);
-  const [running, setRunning] = useState(true);
+  const [started, setStarted] = useState(false); // ready screen until pressed
+  const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
   const [rounds, setRounds] = useState(0); // amrap / stopwatch round counter
+  const [elapsed, setElapsed] = useState(0); // total elapsed seconds (reactive)
+
+  // Quiz mode: cycles questions while on (20s question, 10s answer).
+  const [quizOn, setQuizOn] = useState(false);
+  const [quizQs, setQuizQs] = useState<QuizQ[]>([]);
+  const [quizLoading, setQuizLoading] = useState(false);
+
+  // Live power/cadence samples for the ride chart.
+  const [samples, setSamples] = useState<Sample[]>([]);
+
+  const totalPlanned = useMemo(
+    () => (stopwatch ? 0 : phases.reduce((a, p) => a + (p.seconds || 0), 0)),
+    [phases, stopwatch]
+  );
 
   const remainingRef = useRef(remaining);
   const totalRef = useRef(0); // total elapsed seconds
   const indexRef = useRef(0);
   const lastTs = useRef(0);
+  const runningRef = useRef(false);
+  const dataRef = useRef(trainer.data);
+  runningRef.current = running;
+  dataRef.current = trainer.data;
 
-  // Kick off audio + first cue.
+  // Prepare audio (cues play on Start, not on mount).
   useEffect(() => {
     initAudio();
-    if (!stopwatch) {
-      go();
-      vibrate(60);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function startWorkout() {
+    initAudio();
+    setStarted(true);
+    setRunning(true);
+    if (stopwatch) {
+      lastTs.current = performance.now();
+    } else {
+      startPhase(0); // first cue; ERG target is pushed by the effect below
+    }
+  }
 
   function startPhase(i: number) {
     indexRef.current = i;
@@ -107,13 +136,14 @@ export default function Timer({
   }
 
   useEffect(() => {
-    if (!running || done) return;
+    if (!started || !running || done) return;
     lastTs.current = performance.now();
     const id = setInterval(() => {
       const now = performance.now();
       const dt = (now - lastTs.current) / 1000;
       lastTs.current = now;
       totalRef.current += dt;
+      setElapsed(Math.floor(totalRef.current));
 
       if (stopwatch) {
         setRemaining(Math.floor(totalRef.current));
@@ -141,7 +171,33 @@ export default function Timer({
     }, 150);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, done, stopwatch]);
+  }, [started, running, done, stopwatch]);
+
+  // Sample live power/cadence every 2s (while pedalling) for the chart.
+  useEffect(() => {
+    if (!isRide || !started) return;
+    const id = setInterval(() => {
+      if (runningRef.current) {
+        setSamples((s) => [...s, { p: dataRef.current.power, c: dataRef.current.cadence }]);
+      }
+    }, 2000);
+    return () => clearInterval(id);
+  }, [isRide, started]);
+
+  async function toggleQuiz() {
+    if (quizOn) {
+      setQuizOn(false);
+      return;
+    }
+    setQuizLoading(true);
+    try {
+      const qs = await loadQuiz();
+      setQuizQs(qs);
+      setQuizOn(qs.length > 0);
+    } finally {
+      setQuizLoading(false);
+    }
+  }
 
   function skip() {
     if (stopwatch) return;
@@ -196,12 +252,20 @@ export default function Timer({
   const working = isWork(phaseKind);
   const upNext = !stopwatch && phases[index + 1] ? phases[index + 1].label : "";
   const phasePct = cur && cur.seconds ? 1 - remaining / cur.seconds : 0;
+  const overallLeft = Math.max(0, totalPlanned - elapsed);
+  const overallPct = totalPlanned ? Math.min(100, (elapsed / totalPlanned) * 100) : 0;
 
   return (
     <div className="timer-overlay">
+      {quizOn && quizQs.length > 0 && (
+        <QuizCard questions={quizQs} onStop={() => setQuizOn(false)} />
+      )}
+
       <div className="timer-phase">
         {workout.title} ·{" "}
-        {stopwatch ? "Stopwatch" : amrap ? "AMRAP" : `${working ? "Work" : "Rest"} · ${index + 1}/${phases.length}`}
+        {!started
+          ? "Ready"
+          : stopwatch ? "Stopwatch" : amrap ? "AMRAP" : `${working ? "Work" : "Rest"} · ${index + 1}/${phases.length}`}
       </div>
 
       <div className="timer-current">
@@ -249,12 +313,23 @@ export default function Timer({
 
       {!stopwatch && (
         <>
-          <div className="timer-up-next">{upNext ? `Up next: ${upNext}` : "Last one — finish strong!"}</div>
+          <div className="timer-up-next">
+            {!started
+              ? (isRide ? "Connect your trainer, then press Start" : "Press Start when you're ready")
+              : upNext ? `Up next: ${upNext}` : "Last one — finish strong!"}
+          </div>
           <div className="timer-progress">
             <div style={{ width: `${Math.min(100, phasePct * 100)}%` }} />
           </div>
+          <div className="timer-overall">
+            <span>{fmt(elapsed)} elapsed</span>
+            <div className="timer-overall-bar"><div style={{ width: `${overallPct}%` }} /></div>
+            <span>{fmt(overallLeft)} left</span>
+          </div>
         </>
       )}
+
+      {isRide && started && <RideChart samples={samples} />}
 
       {isRide && (
         <div className="trainer-panel">
@@ -312,16 +387,34 @@ export default function Timer({
         </div>
       )}
 
-      <div className="timer-controls">
-        {!stopwatch && <button className="btn ghost" onClick={prev}>‹ Back</button>}
-        <button className="btn primary" onClick={() => { initAudio(); setRunning((r) => !r); }}>
-          {running ? "Pause" : "Resume"}
+      {started && (
+        <button
+          className={`btn block ${quizOn ? "primary" : "ghost"}`}
+          style={{ marginBottom: 10 }}
+          onClick={toggleQuiz}
+          disabled={quizLoading}
+        >
+          {quizLoading ? <span className="spinner" /> : quizOn ? "■ Stop quiz" : "🧠 Quiz me"}
         </button>
-        {!stopwatch && <button className="btn ghost" onClick={skip}>Skip ›</button>}
-      </div>
+      )}
+
+      {started ? (
+        <div className="timer-controls">
+          {!stopwatch && <button className="btn ghost" onClick={prev}>‹ Back</button>}
+          <button className="btn primary" onClick={() => { initAudio(); setRunning((r) => !r); }}>
+            {running ? "Pause" : "Resume"}
+          </button>
+          {!stopwatch && <button className="btn ghost" onClick={skip}>Skip ›</button>}
+        </div>
+      ) : (
+        <button className="btn primary block lg" onClick={startWorkout}>
+          ▶ Start {isRide ? "ride" : "workout"}
+        </button>
+      )}
+
       <div className="btn-row" style={{ marginTop: 10 }}>
-        <button className="btn block" onClick={complete}>Finish</button>
-        <button className="btn ghost" onClick={onClose}>Quit</button>
+        {started && <button className="btn block" onClick={complete}>Finish</button>}
+        <button className="btn ghost block" onClick={onClose}>{started ? "Quit" : "Back"}</button>
       </div>
     </div>
   );

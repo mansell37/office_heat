@@ -64,6 +64,54 @@ def _extract_json(text: str) -> dict:
     return json.loads(text[start:end + 1])
 
 
+def _extract_json_array(text: str) -> list:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+        if text.startswith("json"):
+            text = text[4:]
+    start, end = text.find("["), text.rfind("]")
+    return json.loads(text[start:end + 1])
+
+
+def generate_quiz(n: int = 8) -> list[dict]:
+    """Generate a batch of mixed multiple-choice trivia questions via Claude."""
+    if not ANTHROPIC_API_KEY:
+        raise RuntimeError("ANTHROPIC_API_KEY is not set — AI quiz is unavailable.")
+
+    from anthropic import Anthropic
+
+    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+    msg = client.messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=2000,
+        system="You write fun, punchy pub-quiz trivia for someone exercising. Return ONLY JSON.",
+        messages=[{"role": "user", "content": (
+            f"Generate {n} mixed general-knowledge multiple-choice trivia questions "
+            "(spread across geography, science, history, sport, music, film, nature, food). "
+            "Vary the difficulty. Return ONLY a JSON array; each item must be "
+            '{"q": "the question", "options": ["four", "short", "distinct", "options"], '
+            '"answer": "the exact correct option string"}. '
+            "Keep questions short and answers unambiguous. JSON only."
+        )}],
+    )
+    if msg.stop_reason == "max_tokens":
+        raise RuntimeError("AI quiz response was cut off — try again.")
+    data = _extract_json_array("".join(b.text for b in msg.content if b.type == "text"))
+
+    out = []
+    for item in data:
+        q = item.get("q")
+        opts = item.get("options")
+        ans = item.get("answer")
+        # Only keep well-formed questions whose answer is one of the options.
+        if q and isinstance(opts, list) and len(opts) >= 2 and ans in opts:
+            out.append({"q": str(q), "options": [str(o) for o in opts], "answer": str(ans)})
+    if not out:
+        raise RuntimeError("AI returned no valid quiz questions.")
+    return out
+
+
 def generate_ai(wtype, duration_min, energy, ftp=200):
     if not ANTHROPIC_API_KEY:
         raise RuntimeError("ANTHROPIC_API_KEY is not set — AI generation is unavailable.")

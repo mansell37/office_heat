@@ -35,6 +35,15 @@ def ai_status():
     return {"configured": bool(ANTHROPIC_API_KEY)}
 
 
+@router.get("/quiz")
+def quiz():
+    # Fresh AI trivia when a key is set; otherwise the frontend uses its local bank.
+    try:
+        return {"questions": ai.generate_quiz(), "source": "ai"}
+    except Exception:
+        return {"questions": [], "source": "none"}
+
+
 @router.post("/generate")
 def generate_workout(req: GenerateRequest, db: Session = Depends(get_db)):
     # Per-workout FTP override (e.g. a different rider) falls back to the saved default.
