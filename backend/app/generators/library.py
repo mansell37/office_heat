@@ -6,7 +6,7 @@ energy level, so a handful of templates cover every time/energy combination.
 """
 import random
 
-from . import cardio, strength, yoga
+from . import cardio, core, strength, yoga
 
 STRENGTH_TEMPLATES = [
     {"key": "emom_engine", "title": "16kg EMOM Engine", "format": "EMOM",
@@ -62,6 +62,24 @@ YOGA_TEMPLATES = [
      "blurb": "Stronger flow with plank, boat and balance work."},
 ]
 
+CORE_TEMPLATES = [
+    {"key": "core_circuit", "title": "Core Circuit", "format": "CIRCUIT",
+     "keys": ["mountain_climbers", "bicycle_crunch", "plank", "leg_raises", "shoulder_taps", "glute_bridge"],
+     "blurb": "Timed stations through the whole midsection."},
+    {"key": "plank_series", "title": "Plank & Hold Series", "format": "HOLDS",
+     "keys": ["plank", "side_plank", "hollow_hold", "bear_hold"],
+     "blurb": "Isometric holds — planks, side plank, hollow, bear."},
+    {"key": "ab_tabata", "title": "Ab Tabata", "format": "TABATA",
+     "keys": ["mountain_climbers", "bicycle_crunch", "flutter_kicks", "v_up"],
+     "blurb": "20s on / 10s off blasts — quick and spicy."},
+    {"key": "core_amrap", "title": "Core AMRAP", "format": "AMRAP",
+     "keys": ["reverse_crunch", "bird_dog", "russian_twist", "superman", "dead_bug"],
+     "blurb": "As many rounds as possible of a short rep circuit."},
+    {"key": "lower_abs", "title": "Lower-Ab Focus", "format": "CIRCUIT",
+     "keys": ["leg_raises", "flutter_kicks", "reverse_crunch", "hollow_hold", "heel_taps"],
+     "blurb": "Targets the lower abs and deep core."},
+]
+
 
 def _slim(templates):
     return [{"key": t["key"], "title": t["title"], "format": t["format"], "blurb": t["blurb"]}
@@ -73,6 +91,7 @@ def list_templates():
         "strength": _slim(STRENGTH_TEMPLATES),
         "cardio": _slim(CARDIO_TEMPLATES),
         "yoga": _slim(YOGA_TEMPLATES),
+        "core": _slim(CORE_TEMPLATES),
     }
 
 
@@ -104,6 +123,9 @@ def generate(wtype, duration_min, energy, fmt=None, ftp=200, key=None, intensity
             templates = [t for t in YOGA_TEMPLATES if t["format"] == "GENTLE"]
         t = _pick(templates, fmt, key)
         wk = yoga.BUILDERS[t["format"]](None, duration_min, energy, t["title"])
+    elif wtype == "core":
+        t = _pick(CORE_TEMPLATES, fmt, key)
+        wk = core.BUILDERS[t["format"]](t["keys"], duration_min, energy, t["title"])
     else:
         templates = CARDIO_TEMPLATES
         # On a wrecked day with no specific ask, steer toward easy rides.

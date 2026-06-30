@@ -7,8 +7,9 @@ const DURATIONS: Record<WorkoutType, number[]> = {
   strength: [10, 15, 20, 30],
   cardio: [20, 30, 40, 50, 60, 90],
   yoga: [10, 15, 20, 30, 45],
+  core: [5, 7, 10, 12, 15],
 };
-const DEFAULT_IDX: Record<WorkoutType, number> = { strength: 2, cardio: 1, yoga: 2 };
+const DEFAULT_IDX: Record<WorkoutType, number> = { strength: 2, cardio: 1, yoga: 2, core: 2 };
 
 const ENERGIES: { key: Energy; emoji: string; name: string; desc: string }[] = [
   { key: "fresh", emoji: "💪", name: "Fresh", desc: "Full send" },
@@ -70,6 +71,7 @@ export default function Generate({ onToast }: { onToast: (m: string) => void }) 
           <button className={type === "strength" ? "active" : ""} onClick={() => setType("strength")}>🏋️ Strength</button>
           <button className={type === "cardio" ? "active" : ""} onClick={() => setType("cardio")}>🚲 Bike</button>
           <button className={type === "yoga" ? "active" : ""} onClick={() => setType("yoga")}>🧘 Yoga</button>
+          <button className={type === "core" ? "active" : ""} onClick={() => setType("core")}>🔥 Core</button>
         </div>
 
         <div className="label mt">Time (minutes)</div>

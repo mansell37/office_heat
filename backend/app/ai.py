@@ -38,6 +38,13 @@ def _system_prompt(wtype, duration_min, energy, ftp):
                  "floor press, rows, snatch, get-ups, etc.).")
         timer = "Use timer 'emom' for EMOM, 'interval' for circuits/tabata, 'stopwatch' for ladders/AMRAP-for-time."
         power = ""
+    elif wtype == "core":
+        equip = ("A yoga mat and bodyweight; the 16kg kettlebell is OPTIONAL on a few moves. "
+                 "Focus on the core/abs (planks, hollow holds, leg raises, mountain climbers, "
+                 "bicycle crunches, dead bugs, bird dogs, Russian twists, etc.).")
+        timer = ("Use timer 'interval' for timed stations (give each block seconds and a kind of "
+                 "work/rest), or 'amrap' for a rep-based round circuit (give reps, no seconds).")
+        power = ""
     else:
         equip = "A bike on a Wahoo smart trainer. Prescribe efforts as % of FTP."
         timer = "Use timer 'interval'. Every block needs seconds, power_pct and kind (warmup/work/rest/cooldown)."

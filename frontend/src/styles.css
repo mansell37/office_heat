@@ -99,8 +99,9 @@ body {
 
 .seg { display: flex; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; }
 .seg button {
-  flex: 1; border: none; background: transparent; color: var(--muted);
-  padding: 10px; border-radius: 9px; font-size: 15px; font-weight: 600; cursor: pointer;
+  flex: 1; min-width: 0; border: none; background: transparent; color: var(--muted);
+  padding: 10px 5px; border-radius: 9px; font-size: clamp(12px, 3.4vw, 15px);
+  font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 .seg button.active { background: var(--accent); color: #fff; }
 

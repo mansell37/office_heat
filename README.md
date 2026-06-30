@@ -6,6 +6,8 @@ when time and sleep are in short supply.
 
 - **Strength** (kettlebell) workouts: 10 / 15 / 20 / 30 min
 - **Bike** (trainer) workouts: 20 / 30 / 40 / 50 / 60 / 90 min
+- **Core** (bodyweight + mat, optional kettlebell) sessions: 5 / 7 / 10 / 12 / 15 min —
+  timed station circuits, plank/hold series, ab Tabata, and a rep-based AMRAP
 - **Yoga** (mat) flows: 10 / 15 / 20 / 30 / 45 min — guided, timed pose holds with
   breathing cues, Sanskrit names and an illustration for each pose. Three styles
   (Full-Body Flow / Gentle Restorative / Core & Strength). Pose data &

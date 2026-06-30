@@ -1,5 +1,5 @@
 export type Energy = "fresh" | "ok" | "wrecked";
-export type WorkoutType = "strength" | "cardio" | "yoga";
+export type WorkoutType = "strength" | "cardio" | "yoga" | "core";
 export type TimerKind = "emom" | "amrap" | "interval" | "stopwatch";
 
 export interface Block {

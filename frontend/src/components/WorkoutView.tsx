@@ -114,7 +114,10 @@ export default function WorkoutView({
       <div className="wk-title">{workout.title}</div>
       <div className="wk-meta">
         <span className="badge">
-          {workout.type === "strength" ? "🏋️ Strength" : workout.type === "yoga" ? "🧘 Yoga" : "🚲 Bike"}
+          {workout.type === "strength" ? "🏋️ Strength"
+            : workout.type === "yoga" ? "🧘 Yoga"
+            : workout.type === "core" ? "🔥 Core"
+            : "🚲 Bike"}
         </span>
         <span className="badge">⏱ {workout.duration_min} min</span>
         <span className="badge">{ENERGY_EMOJI[workout.energy]} {workout.energy}</span>

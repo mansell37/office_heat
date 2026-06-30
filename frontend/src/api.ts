@@ -42,6 +42,7 @@ export const api = {
       strength: { key: string; title: string; format: string; blurb: string }[];
       cardio: { key: string; title: string; format: string; blurb: string }[];
       yoga: { key: string; title: string; format: string; blurb: string }[];
+      core: { key: string; title: string; format: string; blurb: string }[];
     }>("/api/templates"),
 
   generate: (body: {
